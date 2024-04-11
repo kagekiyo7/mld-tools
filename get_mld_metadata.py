@@ -76,7 +76,8 @@ def is_valid_mld(mld: bytes):
     return True
 
 def main(file_path):
-    metadata_binary = file.read()
+    with open(file_path, "rb") as file:
+        metadata_binary = file.read()
     if not is_valid_mld(metadata_binary):
         print("It's not a mld.")
         return
