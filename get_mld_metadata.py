@@ -29,8 +29,7 @@ def get_metadata(mld: bytes):
                 metadata["from"] = convert_to_bin(data)[0:7]
                 metadata["protect"] = bool(int(convert_to_bin(data)[7]))
             case "vers":
-                version = data
-                metadata["version"] = version.decode("shift_jis", errors="ignore")
+                metadata["version"] = data.decode("shift_jis", errors="ignore")
             case "date":
                 date = data.decode("shift_jis", errors="ignore")
                 metadata["date"] = datetime.datetime.strptime(date, '%Y%m%d')
@@ -59,23 +58,29 @@ def get_metadata(mld: bytes):
                  })
         data_info_i += 6 + size
     return metadata
-    
+
 def convert_to_bin(bytes) -> str:
     bin_list = list()
     for byte in bytes:
         bin_list.append(format(byte, '08b'))
 
     return ''.join(map(str, bin_list))
-    
-def main(file_path):
-    with open(file_path, "rb") as file:
-        metadata_binary = file.read()
 
-    try:
-        metadata = get_metadata(metadata_binary)
-    except IndexError as e:
-        print("Error: It's not a mld.")
+def is_valid_mld(mld: bytes):
+    if len(mld) < (0x0C): return False
+    data_info_size = int.from_bytes(mld[0x08:0x0A]) - 3
+    if len(mld) < (0x0D+data_info_size): return False
+    file_byte = int.from_bytes(mld[0x04:0x08]) + 8
+    #3MB
+    if file_byte > (3 * 1000 * 1000): return False
+    return True
+
+def main(file_path):
+    metadata_binary = file.read()
+    if not is_valid_mld(metadata_binary):
+        print("It's not a mld.")
         return
+    metadata = get_metadata(metadata_binary)
     
     # format
     match metadata["data_type_major"]:
