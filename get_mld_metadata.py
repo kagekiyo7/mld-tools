@@ -10,7 +10,6 @@ def get_metadata(mld: bytes):
     # header part
     data_info_size = int.from_bytes(mld[0x08:0x0A]) - 3
     metadata["file_byte"] = int.from_bytes(mld[0x04:0x08]) + 8
-    
     metadata["data_type_major"] = mld[0x0A]
     metadata["data_type_minor"] = mld[0x0B]
     metadata["number_of_tracks"] = mld[0x0C]
@@ -67,6 +66,7 @@ def convert_to_bin(bytes) -> str:
     return ''.join(map(str, bin_list))
 
 def is_valid_mld(mld: bytes):
+    if mld[0:4] !=  b"melo": return False
     if len(mld) < (0x0C): return False
     data_info_size = int.from_bytes(mld[0x08:0x0A]) - 3
     if len(mld) < (0x0D+data_info_size): return False
