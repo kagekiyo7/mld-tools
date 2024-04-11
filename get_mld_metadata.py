@@ -77,11 +77,11 @@ def is_valid_mld(mld: bytes):
 
 def main(file_path):
     with open(file_path, "rb") as file:
-        metadata_binary = file.read()
-    if not is_valid_mld(metadata_binary):
+        mld_binary = file.read()
+    if not is_valid_mld(mld_binary):
         print("It's not a mld.")
         return
-    metadata = get_metadata(metadata_binary)
+    metadata = get_metadata(mld_binary)
     
     # format
     match metadata["data_type_major"]:
