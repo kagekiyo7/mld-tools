@@ -8,3 +8,5 @@
 | MidRadio Player (Ver.7) | YAMAHA S-YXG20 (?) | Most mld files cannot be played. |
 | MidRadio Player (Ver.~6) | YAMAHA S-YXG50 (?) | Most mld files cannot be played. |
 | PsmPlayer | Windows MIDI | |
+
+(others: TiMidity++, MLDUtil, Awave Studio)
