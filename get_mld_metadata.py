@@ -86,7 +86,7 @@ def main(file_path):
     # format
     match metadata["data_type_major"]:
         case 1:
-            metadata["data_type_major"] = f"{metadata['data_type_major']} (ringtorn)"
+            metadata["data_type_major"] = f"{metadata['data_type_major']} (ringtone)"
         case 2:
             metadata["data_type_major"] = f"{metadata['data_type_major']} (music)"
         case _:
@@ -118,7 +118,7 @@ def main(file_path):
     if ("version" in metadata):
         integer_part = int(metadata["version"][0:2])
         decimal_part = int(metadata["version"][2:4])
-        metadata["version"] += f" (MFi{integer_part}.{decimal_part})"
+        metadata["version"] += f" (MFi{integer_part}.{decimal_part:02})"
         
     if ("date" in metadata):
         metadata["date"] = metadata["date"].strftime('%Y/%m/%d')
