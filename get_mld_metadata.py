@@ -4,6 +4,7 @@ import os
 import sys
 import pprint
 import datetime
+import re
 
 def get_metadata(mld: bytes):
     metadata = {}
@@ -71,8 +72,28 @@ def is_valid_mld(mld: bytes):
     data_info_size = int.from_bytes(mld[0x08:0x0A]) - 3
     if len(mld) < (0x0D+data_info_size): return False
     file_byte = int.from_bytes(mld[0x04:0x08]) + 8
-    #3MB
+
+    # Maximum Size 3MB
     if file_byte > (3 * 1000 * 1000): return False
+    
+    data_info = mld[0x0D:0x0D+data_info_size]
+    if not re.match(r"titl|sorc|vers|date|copy|prot|note|exst|supt|auth|ainf|thed",
+                    data_info[0:4].decode("shift_jis", errors="ignore")):
+        return False
+
+    data_info_i = 0
+    while data_info_i < data_info_size:
+        magic = data_info[data_info_i:data_info_i+4].decode("shift_jis", errors="ignore")
+        size = int.from_bytes(data_info[data_info_i+4:data_info_i+6])
+        data = data_info[data_info_i+6:data_info_i+6+size]
+        match magic:
+            case "sorc":
+                if size != 1: return False
+            case "vers":
+                if size != 4: return False
+            case "date":
+                if size != 8: return False
+        data_info_i += 6 + size
     return True
 
 def main(file_path):
