@@ -3,17 +3,22 @@
 import os
 import sys
 import get_mld_metadata
+import re
 
 def extract_mld(binary: bytes):
     ret = []
     file_i = 0
-    magic = "melo".encode()
+    magic = b"melo"
     while True:
         mld_dict = {}
         file_i = binary.find(magic, file_i)
         if (file_i == -1):
             break
+        print(f"magic: {hex(file_i)}") 
         size = int.from_bytes(binary[file_i+4:file_i+8]) + 8
+        if size > (3 * 1000 * 1000):
+            file_i += 1
+            continue
         mld_binary = binary[file_i:file_i+size]
         if not get_mld_metadata.is_valid_mld(mld_binary): 
             file_i += 1
@@ -39,7 +44,8 @@ def main(file_path):
         for i, file_dict in enumerate(files):
             num = str(i + 1)
             num = num.zfill(dig) if dig > 2 else num.zfill(2)
-            output_path = os.path.join(dir_name, f"{num} {file_dict['title']}.{ext}")
+            filename = re.sub(r'[\\/:*?"<>|]+', "", file_dict['title'])
+            output_path = os.path.join(dir_name, f"{num} {filename}.{ext}")
             with open(output_path, "wb") as f:
                 f.write(file_dict["binary"])
                 print(f"{os.path.basename(output_path)}: done!")
