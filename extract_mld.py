@@ -46,6 +46,8 @@ def main(file_path):
             num = num.zfill(dig) if dig > 2 else num.zfill(2)
             filename = re.sub(r'[\\/:*?"<>|]+', "", file_dict['title'])
             output_path = os.path.join(dir_name, f"{num} {filename}.{ext}")
+            if os.path.isfile(output_path):
+                output_path = os.path.join(dir_name, f"{num} {filename}_.{ext}")
             with open(output_path, "wb") as f:
                 f.write(file_dict["binary"])
                 print(f"{os.path.basename(output_path)}: done!")
