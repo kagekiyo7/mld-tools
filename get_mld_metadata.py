@@ -32,7 +32,10 @@ def get_metadata(mld: bytes):
                 metadata["version"] = data.decode("shift_jis", errors="ignore")
             case "date":
                 date = data.decode("shift_jis", errors="ignore")
-                metadata["date"] = datetime.datetime.strptime(date, '%Y%m%d')
+                try:
+                    metadata["date"] = datetime.datetime.strptime(date, '%Y%m%d')
+                except ValueError:
+                    pass
             case "copy":
                 metadata["copyright"] = data.decode("shift_jis", errors="ignore")
             # case "prot":
