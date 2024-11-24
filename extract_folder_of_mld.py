@@ -60,8 +60,9 @@ def process_file(file_path: str, output_dir: str, delete: bool, existing_files: 
                 print(f"Matches existing file: {existing_files[file_hash]}")
                 continue
             
-            if os.path.isfile(output_path):
-                output_path = os.path.join(output_dir, f"{num} {filename}_.{ext}")
+            while os.path.isfile(output_path):
+                  filename = filename + "_"
+                  output_path = os.path.join(output_dir, f"{num} {filename}.{ext}")
             
             with open(output_path, "wb") as f:
                 f.write(file_dict["binary"])
