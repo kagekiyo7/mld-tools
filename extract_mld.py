@@ -44,7 +44,7 @@ def main(file_path):
         for i, file_dict in enumerate(files):
             num = str(i + 1)
             num = num.zfill(dig) if dig > 2 else num.zfill(2)
-            filename = re.sub(r'[\\/:*?"<>|]+', "", file_dict['title'])
+            filename = re.sub(r'[\\/:*?"<>|\t]+', "", file_dict['title'])
             output_path = os.path.join(dir_name, f"{num} {filename}.{ext}")
             if os.path.isfile(output_path):
                 output_path = os.path.join(dir_name, f"{num} {filename}_.{ext}")
