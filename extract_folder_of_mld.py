@@ -40,18 +40,17 @@ def process_file(file_path: str, output_dir: str, delete: bool, existing_files: 
     file_name = os.path.splitext(os.path.basename(file_path))[0]
     with open(file_path, "rb") as f:
         target_binary = f.read()
+    print(f"\nFile: {os.path.basename(file_path)}")
     mlds = extract_mld(target_binary)
     if not mlds:
-        print(f"{os.path.basename(file_path)}: There is no mld.")
+        print(f"There is no mld.")
         return
 
     def output(files, ext):
         dig = len(str(len(files)))
         for i, file_dict in enumerate(files):
-            num = str(i + 1)
-            num = num.zfill(dig) if dig > 2 else num.zfill(2)
-            filename = re.sub(r'[\\/:*?"<>|]+', "", file_dict['title'])
-            output_path = os.path.join(output_dir, f"{num} {filename}.{ext}")
+            filename = re.sub(r'[\\/:*?"<>|\t]+', "", file_dict['title'])
+            output_path = os.path.join(output_dir, f"{filename}.{ext}")
             
             # Check for duplicates
             file_hash = hashlib.md5(file_dict["binary"]).hexdigest()
@@ -61,8 +60,8 @@ def process_file(file_path: str, output_dir: str, delete: bool, existing_files: 
                 continue
             
             while os.path.isfile(output_path):
-                  filename = filename + "_"
-                  output_path = os.path.join(output_dir, f"{num} {filename}.{ext}")
+                filename = filename + "_"
+                output_path = os.path.join(output_dir, f"{filename}.{ext}")
             
             with open(output_path, "wb") as f:
                 f.write(file_dict["binary"])
