@@ -10,25 +10,26 @@ from typing import List, Dict
 
 def extract_mld(binary: bytes) -> List[Dict]:
     ret = []
-    file_i = 0
     magic = b"melo"
+    file_i = -1
+    
     while True:
         mld_dict = {}
-        file_i = binary.find(magic, file_i)
+        file_i = binary.find(magic, file_i+1)
         if file_i == -1:
             break
-        print(f"magic: {hex(file_i)}")
+
         size = int.from_bytes(binary[file_i+4:file_i+8]) + 8
-        if size > (3 * 1000 * 1000):
-            file_i += 1
-            continue
+            
         mld_binary = binary[file_i:file_i+size]
+        
         if not get_mld_metadata.is_valid_mld(mld_binary):
-            file_i += 1
             continue
+        
         mld_dict["binary"] = mld_binary
         mld_dict["title"] = get_mld_metadata.get_metadata(mld_binary).get("title", "")
-        file_i += 1
+        mld_dict["offset"] = file_i
+        
         ret.append(mld_dict)
     return ret
 
@@ -38,42 +39,45 @@ def get_file_hash(file_path: str) -> str:
 
 def process_file(file_path: str, output_dir: str, delete: bool, existing_files: Dict[str, str]) -> None:
     file_name = os.path.splitext(os.path.basename(file_path))[0]
+    
     with open(file_path, "rb") as f:
         target_binary = f.read()
-    print(f"\nFile: {os.path.basename(file_path)}")
-    mlds = extract_mld(target_binary)
-    if not mlds:
-        print(f"There is no mld.")
+    
+    print(f"\nInput: {file_path}")
+    mld_dicts = extract_mld(target_binary)
+    
+    if not mld_dicts:
+        print(f"Failed: There is no MLD.")
         return
 
-    def output(files, ext):
-        dig = len(str(len(files)))
-        for i, file_dict in enumerate(files):
-            filename = re.sub(r'[\\/:*?"<>|\t]+', "", file_dict['title'])
+    def output(mld_dicts, ext):
+        for mld_dict in mld_dicts:
+            filename = re.sub(r'[\\/:*?"<>|\t]+', "", mld_dict['title'])
             output_path = os.path.join(output_dir, f"{filename}.{ext}")
             
+            i = 1
+            while os.path.isfile(output_path):
+                output_path = os.path.join(output_dir, f"{filename} ({i}).{ext}")
+                i += 1
+            
             # Check for duplicates
-            file_hash = hashlib.md5(file_dict["binary"]).hexdigest()
+            file_hash = hashlib.md5(mld_dict["binary"]).hexdigest()
             if file_hash in existing_files:
-                print(f"Duplicate file found: {output_path}")
-                print(f"Matches existing file: {existing_files[file_hash]}")
+                print(f"""Failed: The md5 matches that of file '{os.path.basename(existing_files[file_hash])}' (offset: {hex(mld_dict['offset'])})""")
                 continue
             
-            while os.path.isfile(output_path):
-                filename = filename + "_"
-                output_path = os.path.join(output_dir, f"{filename}.{ext}")
-            
             with open(output_path, "wb") as f:
-                f.write(file_dict["binary"])
-                print(f"{os.path.basename(output_path)}: done!")
+                f.write(mld_dict["binary"])
+                print(f"""Succeed: {os.path.basename(output_path)} (songname: '{mld_dict['title']}', offset: {hex(mld_dict['offset'])})""")
             
             existing_files[file_hash] = output_path
 
-    output(mlds, ext="mld")
+    output(mld_dicts, ext="mld")
 
     if delete:
         os.remove(file_path)
         print(f"Deleted original file: {file_path}")
+    
 
 def main():
     parser = argparse.ArgumentParser(description="Extract MLD files from a directory.")
@@ -82,7 +86,7 @@ def main():
     args = parser.parse_args()
 
     input_dir = args.input_dir
-    output_dir = input_dir
+    output_dir = os.path.join(os.path.dirname(input_dir), "output_mld")
     delete = args.delete
 
     if not os.path.isdir(input_dir):
@@ -97,7 +101,9 @@ def main():
     for root, _, files in os.walk(input_dir):
         for file in files:
             file_path = os.path.join(root, file)
-            process_file(file_path, output_dir, delete, existing_files)   
+            process_file(file_path, output_dir, delete, existing_files)
+    
+    print(f"\noutput => {output_dir}")
 
 if __name__ == "__main__":
     main()
