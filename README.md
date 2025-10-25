@@ -4,7 +4,8 @@ MFi format (.mld) tools
 - get_mld_metadata.py: Print metadata of mld file.
 
 ## extract_mld.py
-```usage: MLD extractor [-h] [-o OUT_DIR] [-r | --rename | --no-rename] [-s | --sequential | --no-sequential]
+```
+usage: MLD extractor [-h] [-o OUT_DIR] [-r | --rename | --no-rename] [-s | --sequential | --no-sequential]
                      [-c | --check-mld-structure | --no-check-mld-structure]
                      [-d | --remove-duplicates | --no-remove-duplicates]
                      inputs [inputs ...]
