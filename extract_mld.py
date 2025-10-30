@@ -96,7 +96,7 @@ def save_mld_files(extracting_mld_dicts, out_dir, enable_rename, enable_sequenti
 
         if enable_rename:
             # Remove characters that cannot be used in songnames.
-            songname = re.sub(r'[\\/:*?"<>|\t]+', "", extracting_mld_dict['title'])
+            songname = re.sub(r'[\\/:*?"<>|\t\r\n]+', "", extracting_mld_dict['title'])
         else:
             songname = extracting_mld_dict["file_name"]
 
