@@ -64,7 +64,7 @@ def detect_mld(file_path, check_mld_structure):
         if check_mld_structure:
             try:
                 mld_info = parse_mld(candidate_mld_data)
-                temp = "" if mld_info["titl"] is None else mld_info["titl"].decode("cp932", errors="ignore")
+                temp = "" if "titl" not in mld_info else mld_info["titl"].decode("cp932", errors="ignore")
                 extracting_dict["title"] = "NO NAME" if temp in ["", " "] else temp
             except Exception as e:
                 print("Skiped because MLD parsing failed.", f"({e})")
