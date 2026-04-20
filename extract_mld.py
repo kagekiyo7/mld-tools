@@ -24,6 +24,9 @@ def main(inputs, out_dir, enable_rename=True, enable_sequential=False, check_mld
     if remove_duplicates:
         extracting_mld_dicts = remove_duplicates_mld(extracting_mld_dicts)
 
+    if len(extracting_mld_dicts) > 0:
+        os.makedirs(out_dir, exist_ok=True)
+
     save_mld_files(extracting_mld_dicts, out_dir, enable_rename, enable_sequential)
     print(f"\n=> {out_dir}")
 
@@ -61,11 +64,19 @@ def detect_mld(file_path, check_mld_structure):
         end = min(offset+size, len(target))
 
         candidate_mld_data = target[offset : end]
+        default_name = "NO NAME"
+
         if check_mld_structure:
             try:
                 mld_info = parse_mld(candidate_mld_data)
-                temp = "" if "titl" not in mld_info else mld_info["titl"].decode("cp932", errors="ignore")
-                extracting_dict["title"] = "NO NAME" if temp in ["", " "] else temp
+                if "titl" in mld_info and mld_info["titl"] is not None:
+                    title = mld_info["titl"].decode("cp932", errors="ignore")
+                    if title == "" or title.isspace():
+                        title = default_name
+                else:
+                    title = default_name
+
+                extracting_dict["title"] = title
             except Exception as e:
                 print("Skiped because MLD parsing failed.", f"({e})")
                 continue
@@ -77,7 +88,7 @@ def detect_mld(file_path, check_mld_structure):
                     namesize = int.from_bytes(candidate_mld_data[title_off + 4 : title_off + 6], "big")
                     extracting_dict["title"] = candidate_mld_data[title_off + 6 : title_off + 6 + namesize].decode("cp932")
             except:
-                extracting_dict["title"] = "NO NAME"
+                extracting_dict["title"] = default_name
 
         extracting_dict["binary"] = candidate_mld_data
         extracting_dict["sha256"] = get_file_hash(candidate_mld_data)
@@ -86,6 +97,19 @@ def detect_mld(file_path, check_mld_structure):
         print(f"""Succeeded: '{extracting_dict['title']}'""")
     return ret
 
+def sanitize_filename_visual(name):
+    table = str.maketrans({
+        '\\': '＼',
+        '/': '／',
+        ':': '：',
+        '*': '＊',
+        '?': '？',
+        '"': '”',
+        '<': '＜',
+        '>': '＞',
+        '|': '｜',
+    })
+    return name.translate(table)
 
 def save_mld_files(extracting_mld_dicts, out_dir, enable_rename, enable_sequential):
     digits_num = len(str(len(extracting_mld_dicts)))
@@ -96,7 +120,8 @@ def save_mld_files(extracting_mld_dicts, out_dir, enable_rename, enable_sequenti
 
         if enable_rename:
             # Remove characters that cannot be used in songnames.
-            songname = re.sub(r'[\\/:*?"<>|\t\r\n]+', "", extracting_mld_dict['title'])
+            songname = re.sub(r'[\t\r\n]+', "", extracting_mld_dict['title'])
+            songname = sanitize_filename_visual(songname)
         else:
             songname = extracting_mld_dict["file_name"]
 
@@ -157,6 +182,5 @@ if __name__ == "__main__":
         os.path.dirname(args.inputs[0]),
         "MLD_files",
     )
-    os.makedirs(out_dir, exist_ok=True)
 
     main(args.inputs, out_dir, args.rename, args.sequential, args.check_mld_structure, args.remove_duplicates)
